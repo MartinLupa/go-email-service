@@ -17,6 +17,9 @@ type EmailPayload struct {
 	To      string `json:"to"`
 }
 
+// TODO: add Swagger documentation
+// TODO: add testing
+
 func main() {
 	err := godotenv.Load()
 
