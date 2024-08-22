@@ -19,6 +19,8 @@ type EmailPayload struct {
 
 // TODO: add Swagger documentation
 // TODO: add testing
+// TODO: add structured error messages
+// TODO: add payload validation
 
 func main() {
 	err := godotenv.Load()
