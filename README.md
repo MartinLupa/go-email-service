@@ -2,12 +2,13 @@
 
 ## Overview
 
-This is a simple email service built with Go, designed to send emails using different providers such as Mailgun and SparkPost. It exposes a RESTful API that allows clients to send emails by making HTTP POST requests.
+This is a simple email service built with Go, designed to send emails using different providers such as Mailgun and SparkPost. It integrates with Temporal to manage email sending workflows.
 
 ## Features
 
 - Supports multiple email providers (Mailgun, SparkPost).
 - Simple RESTful API for sending emails.
+- Temporal Workflow integration for managing email tasks.
 - Environment-based configuration using `.env` file.
 - Docker support for easy deployment.
 
@@ -17,6 +18,7 @@ This is a simple email service built with Go, designed to send emails using diff
 
 - [Go](https://golang.org/dl/) installed on your machine.
 - [Docker](https://www.docker.com/) installed (for Docker-based deployment).
+- [Temporal CLI](https://github.com/temporalio/tctl) installed on your machine.
 - Environment variables set in a `.env` file.
 
 ### Installation
@@ -56,6 +58,26 @@ This is a simple email service built with Go, designed to send emails using diff
       ```bash
       docker-compose up
       ```
+
+    - **Using the Temporal CLI**:
+    
+      Checkout to the `feat/temporal-workflow`branch, which contains the required modifications to the service to run it using Temporal.
+
+      Run Temporal server locally:
+      ```bash
+      temporal server start-dev
+      ```
+
+      Run the worker:
+      ```bash
+      go run worker/main.go
+      ```
+
+      Run the service:
+      ```bash
+      go run main.go
+      ```
+
 
 ## Usage
 
