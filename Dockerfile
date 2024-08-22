@@ -12,5 +12,5 @@ COPY . .
 RUN go build -o main .
 # Expose port 8080 to the outside world
 EXPOSE 8080
-# Command to run the executable
-CMD ["./main"]
+# Command to run both Go applications
+CMD ["sh", "-c", "go run worker/main.go & go run main.go"]

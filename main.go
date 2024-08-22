@@ -1,14 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 
+	app "github.com/MartinLupa/go-email-service/app"
 	"github.com/MartinLupa/go-email-service/config"
-	"github.com/MartinLupa/go-email-service/providers"
-	"github.com/MartinLupa/go-email-service/service"
-	"github.com/joho/godotenv"
+	"go.temporal.io/sdk/client"
 )
 
 type EmailPayload struct {
@@ -23,24 +23,25 @@ type EmailPayload struct {
 // TODO: add payload validation
 
 func main() {
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
+	// Load environment variables
 	cfg := config.LoadConfig()
 
-	mailgunProvider := providers.NewMailgunProvider(cfg.MailgunDomain, cfg.MailgunAPIKey)
-	sparkPostProvider := providers.NewSparkPostProvider(cfg.SparkPostAPIKey)
+	// Create the Temporal client object just once per process
+	c, err := client.Dial(client.Options{})
 
-	providersList := []providers.EmailProvider{mailgunProvider, sparkPostProvider}
+	if err != nil {
+		log.Fatalln("Unable to create Temporal client:", err)
+	}
 
-	emailService := service.NewEmailService(providersList, 1)
+	defer c.Close()
 
+	// Define service endpoint
 	http.HandleFunc("/send-email", func(w http.ResponseWriter, r *http.Request) {
 		var payload EmailPayload
+		var result string
+		const SendEmailQueue = "SEND_EMAIL_QUEUE"
 
+		// Parse payload
 		reqErr := json.NewDecoder(r.Body).Decode(&payload)
 
 		if reqErr != nil {
@@ -48,16 +49,44 @@ func main() {
 			return
 		}
 
-		err := emailService.SendEmail("sender@example.com", payload.Subject, payload.Body, payload.To)
-		if err != nil {
-			http.Error(w, "Both providers failed.", http.StatusInternalServerError)
-			return
+		// Config and start Temporal workflow
+		options := client.StartWorkflowOptions{
+			ID:        "send-email-workflow",
+			TaskQueue: SendEmailQueue,
 		}
 
+		input := app.EmailWorkflowParams{
+			Config:  cfg,
+			From:    "sender@gmail.com",
+			Subject: payload.Subject,
+			Body:    payload.Body,
+			To:      payload.To,
+		}
+
+		log.Printf("Starting email sending workflow...\n")
+
+		we, err := c.ExecuteWorkflow(context.Background(), options, app.SendEmail, input)
+
+		if err != nil {
+			log.Fatalln("Unable to start the Workflow:", err)
+		}
+
+		log.Printf("WorkflowID: %s RunID: %s\n", we.GetID(), we.GetRunID())
+
+		err = we.Get(context.Background(), &result)
+
+		if err != nil {
+			log.Fatalln("Unable to get Workflow result:", err)
+		}
+
+		log.Println(result)
+
+		// Return response
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Email sent successfully!"))
+		w.Write([]byte("Email sent successfully"))
 	})
 
+	// Start server
 	log.Println("Starting server on :" + cfg.PORT)
 	log.Fatal(http.ListenAndServe(":"+cfg.PORT, nil))
 }
