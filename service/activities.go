@@ -25,10 +25,6 @@ func SendEmailViaMailgun(config *config.Config, from, subject, body, to string) 
 	return id, err
 }
 
-type SparkPostConfig struct {
-	apiKey string
-}
-
 func SendEmailViaSparkPost(config *config.Config, from, subject, body, to string) (string, error) {
 	// Docs: https://github.com/SparkPost/gosparkpost
 	cfg := &sp.Config{
