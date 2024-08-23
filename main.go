@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	app "github.com/MartinLupa/go-email-service/app"
 	"github.com/MartinLupa/go-email-service/config"
+	app "github.com/MartinLupa/go-email-service/service"
 	"go.temporal.io/sdk/client"
 )
 
@@ -37,9 +37,9 @@ func main() {
 
 	// Define service endpoint
 	http.HandleFunc("/send-email", func(w http.ResponseWriter, r *http.Request) {
+		const SendEmailQueue = "SEND_EMAIL_QUEUE"
 		var payload EmailPayload
 		var result string
-		const SendEmailQueue = "SEND_EMAIL_QUEUE"
 
 		// Parse payload
 		reqErr := json.NewDecoder(r.Body).Decode(&payload)

@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/MartinLupa/go-email-service/app"
 	"github.com/MartinLupa/go-email-service/config"
+	"github.com/MartinLupa/go-email-service/service"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 )
@@ -21,9 +21,9 @@ func main() {
 	w := worker.New(c, cfg.QueueName, worker.Options{})
 
 	// This worker hosts both Workflow and Activity functions.
-	w.RegisterWorkflow(app.SendEmail)
-	w.RegisterActivity(app.SendEmailViaMailgun)
-	w.RegisterActivity(app.SendEmailViaSparkPost)
+	w.RegisterWorkflow(service.SendEmail)
+	w.RegisterActivity(service.SendEmailViaMailgun)
+	w.RegisterActivity(service.SendEmailViaSparkPost)
 
 	// Start listening to the Task Queue.
 	err = w.Run(worker.InterruptCh())
